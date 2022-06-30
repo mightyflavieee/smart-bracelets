@@ -24,7 +24,6 @@ implementation {
   App.Packet -> AMSenderC;
   App.PacketAcknowledgements -> AMSenderC;
   
-  // Fake Kinetic Sensor read
-  App.Read -> FakeKineticSensorC;
-
+  // Fake KineticStatus/Coordinates Sensor read
+  App.Read -> FakeInfoSensorC;
 }
