@@ -22,7 +22,7 @@ typedef nx_struct info {
 #define FALLING 6 
 
 enum{
-AM_MY_MSG = 6,
+	AM_MY_MSG = 6,
 };
 
 #endif

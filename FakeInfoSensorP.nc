@@ -11,7 +11,7 @@ generic module FakeInfoSensorP() {
 
 	// ***************** Boot interface ********************//
 	command error_t Read.read(){
-		call Timer0.startOneShot( 10000 ); // Fake sensor read performed every 10 seconds
+		call Timer0.startPeriodic( 10000 ); // Fake sensor read performed every 10 seconds
 		return SUCCESS;
 	}
 

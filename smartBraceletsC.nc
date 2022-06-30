@@ -8,14 +8,15 @@ module smartBraceletsC {
 	interface Boot; 
     
 	// Interfaces for communication
-    interface AMSend;
-    interface Receive;
-    interface Packet;
-    interface PacketAcknowledgements as Acks;
-    interface SplitControl;
+	interface AMSend;
+	interface Receive;
+	interface Packet;
+	interface PacketAcknowledgements as Acks;
+	interface SplitControl;
 
 	// Interface for timer
-	interface Timer<TMilli>;
+	interface Timer<TMilli> as PairTimer;
+	interface Timer<TMilli> as MissingTimer;
 	
 	// Interface used to perform kinetic status and coordinates fake reading
 	interface Read<uint16_t>;
@@ -56,8 +57,17 @@ module smartBraceletsC {
 		*/
     if(err == SUCCESS) {
 			dbg("logger","MOTE [%d]: is starting the Timer...\n", TOS_NODE_ID);
-			call Timer.startPeriodic(500);
+			call PairTimer.startPeriodic(500);
     }
+  }
+
+	//***************** MilliTimer interface ********************//
+  event void PairTimer.fired() {
+		/* 
+		* This function is used call sendPAIRMessage function when the timer is fired.
+		*/
+		dbg("logger","MOTE [%d]: Timer fired.\n", TOS_NODE_ID);
+		sendPAIRMessage(0);
   }
 
 	//***************** Send PAIR/STOP_PAIRING message function ********************//
@@ -70,7 +80,7 @@ module smartBraceletsC {
 			If TOS_NODE_ID is even, then we use KEY1 as KEY.
 			Otherwise, we use KEY2 as KEY.
 		*/
-		pair_t* pair_msg = (pair_t*)call Packet.getPayload(&packet, sizeof(pair_t));
+		pair_t* pair_msg = (pair_t*) call Packet.getPayload(&packet, sizeof(pair_t));
 		if (pair_msg == NULL) return;
 
 		if(isStopPairing == 1){
@@ -88,16 +98,18 @@ module smartBraceletsC {
 		}
 
 		dbg("logger","MOTE [%d]: Sending INFO message type: PAIR, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
+		// Send the message in broadcast.
 		call AMSend.send(6, &packet, sizeof(pair_t));	
 	}
 
+
 	void sendINFOMessage(uint16_t data[3]){
 		/*
-			This function is used to send INFO messages.
-			The data is composed of:
-				data[0] = x_position
-				data[1] = y_position
-				data[2] = status
+		*	This function is used to send INFO messages.
+		*	The data is composed of:
+		*		data[0] = x_position
+		*		data[1] = y_position
+		*		data[2] = status
 		*/
 		info_t* info_msg = (info_t*) call Packet.getPayload(&packet, sizeof(info_t));
 		if (info_msg == NULL) return;
@@ -112,14 +124,7 @@ module smartBraceletsC {
 		call AMSend.send(TOS_NODE_ID - 2, &packet, sizeof(info_t));
 	}
 
-	//***************** MilliTimer interface ********************//
-  event void Timer.fired() {
-		/* 
-		* This function is used call sendPAIRMessage function when the timer is fired.
-		*/
-		dbg("logger","MOTE [%d]: Timer fired.\n", TOS_NODE_ID);
-		sendPAIRMessage(0);
-  }
+	
 
 	//***************************** Receive interface *****************//
   event message_t* Receive.receive(message_t* buf,void* payload, uint8_t len) {
@@ -140,6 +145,8 @@ module smartBraceletsC {
 			pair_t* rsm_pair = (pair_t*)payload;
 			dbg("logger","MOTED [%d]: Received msg type: PAIR, with key: %s.\n", TOS_NODE_ID, rsm_pair->key);
 			// CHECK KEYS TO END PAIR
+
+			//call Read.read(); // START READING FROM SENSOR
 		}
 		return buf;
   }
@@ -150,6 +157,7 @@ module smartBraceletsC {
 		*	 This event is triggered when the fake status/coordinates sensor finishes to read (after a Read.read()) 
 		*  The data is stored in data[3] -> [X,Y,STATUS]
 		*/
+		// If the read is successful, the mote is paired, and it's not a Parent, then we can send the INFO message.
 		if(result != SUCCESS || isPaired == 0 || TOS_NODE_ID == 1 || TOS_NODE_ID == 2) return;
 
 		sendINFOMessage(data);
