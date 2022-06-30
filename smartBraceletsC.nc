@@ -149,17 +149,17 @@ module smartBraceletsC {
 		*/
 		if (len != sizeof(info_t) && len != sizeof(pair_t)) return buf;
 		
-		// INFO_T STRUCTURE
+		// INFO_T STRUCTURE - HANDLE THE INFO MESSAGE.
 		if(len == sizeof(info_t)){
 			info_t* rsm_info = (info_t*)payload;
-			dbg("logger","MOTED [%d]: Received msg type: INFO, with status: %d, position_x: %d, position_y: %d.\n", TOS_NODE_ID, rsm_info->status, rsm_info->position_x, rsm_info->position_y);
+			dbg("logger","MOTE [%d]: Received msg type: INFO, with status: %d, position_x: %d, position_y: %d.\n", TOS_NODE_ID, rsm_info->status, rsm_info->position_x, rsm_info->position_y);
 			// CHECK STATUS OF THE CHILD
 		}
 
-		// PAIR_T STRUCTURE
+		// PAIR_T STRUCTURE - HANDLE THE PAIR MESSAGE.
 		if(len == sizeof(pair_t)){
 			pair_t* rsm_pair = (pair_t*)payload;
-			dbg("logger","MOTED [%d]: Received msg type: PAIR, with key: %s.\n", TOS_NODE_ID, rsm_pair->key);
+			dbg("logger","MOTE [%d]: Received msg type: PAIR, with key: %s.\n", TOS_NODE_ID, rsm_pair->key);
 			// CHECK KEYS TO END PAIR
 
 			//call Read.read(); // START READING FROM SENSOR
