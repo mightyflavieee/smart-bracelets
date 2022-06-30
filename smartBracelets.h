@@ -4,7 +4,7 @@
 // Pairing phase messages
 typedef nx_struct pair {
 	nx_uint16_t msg_type; // either PAIR or STOP_PAIRING
-	nx_uint8_t[21] key; // 0 if the message type is STOP_PAIRING
+	nx_uint8_t key[21]; // 0 if the message type is STOP_PAIRING
 } pair_t;
 
 // Operation mode messages

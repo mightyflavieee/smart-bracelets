@@ -19,7 +19,7 @@ module smartBraceletsC {
 	interface Timer<TMilli> as MissingTimer;
 	
 	// Interface used to perform kinetic status and coordinates fake reading
-	interface Read<uint16_t>;
+	interface Read<uint16_t*>;
 
   }
 
@@ -52,8 +52,8 @@ module smartBraceletsC {
 	//***************** SplitControl interface ********************//
   event void SplitControl.startDone(error_t err){
 		/*
-			If the split control is started successfully, then we can start the timer in order to send pairing messages.
-			Otherwise, we can't start the timer.
+		*	If the split control is started successfully, then we can start the timer in order to send pairing messages.
+		*	Otherwise, we can't start the timer.
 		*/
     if(err == SUCCESS) {
 			dbg("logger","MOTE [%d]: is starting the Timer...\n", TOS_NODE_ID);
@@ -61,13 +61,29 @@ module smartBraceletsC {
     }
   }
 
+	event void SplitControl.stopDone(error_t err){
+		/* 
+		* When the split control is stopped, we stop the timer.
+		*/
+		call PairTimer.stop();
+		call MissingTimer.stop();
+  }
+
 	//***************** MilliTimer interface ********************//
   event void PairTimer.fired() {
 		/* 
 		* This function is used call sendPAIRMessage function when the timer is fired.
 		*/
-		dbg("logger","MOTE [%d]: Timer fired.\n", TOS_NODE_ID);
+		dbg("logger","MOTE [%d]: PairTimer fired.\n", TOS_NODE_ID);
 		sendPAIRMessage(0);
+  }
+
+	event void MissingTimer.fired() {
+		/* 
+		* This function is used call sendPAIRMessage function when the timer is fired.
+		*/
+		dbg("logger","MOTE [%d]: MissingTimer fired.\n", TOS_NODE_ID);
+
   }
 
 	//***************** Send PAIR/STOP_PAIRING message function ********************//
@@ -91,15 +107,15 @@ module smartBraceletsC {
 		}
 		
 		if(TOS_NODE_ID%2==0) {
-			pair_msg->key = KEY1;
+			strcpy(pair_msg->key,KEY1);
 		}
 		else {
-			pair_msg->key = KEY2;
+			strcpy(pair_msg->key,KEY2);
 		}
 
 		dbg("logger","MOTE [%d]: Sending INFO message type: PAIR, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
 		// Send the message in broadcast.
-		call AMSend.send(6, &packet, sizeof(pair_t));	
+		call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(pair_t));	
 	}
 
 
@@ -149,6 +165,18 @@ module smartBraceletsC {
 			//call Read.read(); // START READING FROM SENSOR
 		}
 		return buf;
+  }
+
+	//********************* AMSend interface ****************//
+  event void AMSend.sendDone(message_t* buf,error_t err) {
+		/* This event is triggered when a message is sent.
+		*/
+		if(&packet == buf && err == SUCCESS) {
+			dbg("logger","MOTE [%d]: Message sent.\n", TOS_NODE_ID);
+		}
+		else{
+			dbg("logger","MOTE [%d]: Message not sent, sendDone error!.\n", TOS_NODE_ID);
+		}
   }
 
 	//************************* Read interface **********************//
