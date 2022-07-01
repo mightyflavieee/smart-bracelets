@@ -33,8 +33,8 @@ module smartBraceletsC {
 	*	MOTE 2 AND MOTE 4 are CHILDREN.
 	*/
 
-	uint8_t KEY1[21] = {'F','I','R','S','T','K','E','Y','F','I','R','S','T','K','E','Y','1','1','1','1','\0'};
-	uint8_t KEY2[21] = {'S','E','C','O','N','D','K','E','Y','S','E','C','O','N','D','K','E','Y','2','2','\0'};
+	uint8_t KEY1[21] = {'F','1','R','S','T','K','3','Y','F','1','R','S','T','K','3','Y','1','1','1','1','\0'};
+	uint8_t KEY2[21] = {'S','3','C','0','N','D','K','3','Y','S','3','C','0','N','D','K','3','Y','2','2','\0'};
 	uint8_t last_x_position = 0;
 	uint8_t last_y_position = 0;
   message_t packet;
@@ -107,11 +107,11 @@ module smartBraceletsC {
 		
 		if(TOS_NODE_ID%2==0) {
 			strcpy(pair_msg->key,KEY1);
-				
 		}
 		else {
 			strcpy(pair_msg->key,KEY2);
 		}
+
 		if(isStopPairing == 1){
 			dbg("logger","MOTE [%d]: Sending PAIR message type: STOP_PAIRING, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
 		}
