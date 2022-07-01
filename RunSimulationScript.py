@@ -36,6 +36,8 @@ out = sys.stdout;
 #Add debug channel
 print "Activate debug message on channel logger"
 t.addChannel("logger",out);
+print "Activate debug message on channel alert"
+t.addChannel("alert",out);
 
 
 print "Creating node 1...";
@@ -94,7 +96,9 @@ for i in range(1, 5):
 
 print "Start simulation with TOSSIM! \n\n\n";
 
-for i in range(0,100):
+for i in range(0,4000):
+	if i == 2000:
+		node3.turnOff()
 	t.runNextEvent()
 	
 print "\n\n\nSimulation finished!";

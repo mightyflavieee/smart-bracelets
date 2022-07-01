@@ -13,34 +13,39 @@ module smartBraceletsC {
 	interface Packet;
 	interface PacketAcknowledgements as Acks;
 	interface SplitControl;
+	
 
 	// Interface for timer
 	interface Timer<TMilli> as PairTimer;
+	interface Timer<TMilli> as InfoTimer;
 	interface Timer<TMilli> as MissingTimer;
 	
-	// Interface used to perform kinetic status and coordinates fake reading
+	// Interface used to perform kinematic status and coordinates fake reading
 	interface Read<uint16_t>;
+	interface Random;
 
   }
 
 } implementation {
 	/*  
 	*	ASSUMPTIONS:
-	*	MOTE 1 AND MOTE 2 is a PAIR, they share KEY1.
-	* MOTE 3 AND MOTE 4 is a PAIR, they share KEY2.
+	* MOTE 2 AND MOTE 4 are a PAIR, they share KEY1.
+	*	MOTE 1 AND MOTE 3 are a PAIR, they share KEY2.
 	*
-	*	MOTE 1 AND MOTE 3 are PARENTS.
-	*	MOTE 2 AND MOTE 4 are CHILDREN.
+	*	MOTE 1 AND MOTE 2 are PARENTS.
+	*	MOTE 3 AND MOTE 4 are CHILDREN.
 	*/
 
 	uint8_t KEY1[21] = {'F','1','R','S','T','K','3','Y','F','1','R','S','T','K','3','Y','1','1','1','1','\0'};
 	uint8_t KEY2[21] = {'S','3','C','0','N','D','K','3','Y','S','3','C','0','N','D','K','3','Y','2','2','\0'};
-	uint8_t last_x_position = 0;
-	uint8_t last_y_position = 0;
+	uint16_t PAIR_ID = 0;
+	uint16_t last_x_position = 0;
+	uint16_t last_y_position = 0;
   message_t packet;
-
-	void sendINFOMessage(uint16_t data);
+	
 	void sendPAIRMessage(uint8_t isStopPairing); 
+	void sendINFOMessage(uint16_t data);
+	void startOperationMode();
 
 	//***************** Boot interface ********************//
   event void Boot.booted() {
@@ -56,7 +61,7 @@ module smartBraceletsC {
 		*/
     if(err == SUCCESS) {
 			dbg("logger","MOTE [%d]: is starting the PairTimer...\n", TOS_NODE_ID);
-			call PairTimer.startPeriodic(500);
+			call PairTimer.startPeriodic(100);
     }
   }
 
@@ -65,61 +70,68 @@ module smartBraceletsC {
 		* When the split control is stopped, we stop the timer.
 		*/
 		call PairTimer.stop();
+		call InfoTimer.stop();
 		call MissingTimer.stop();
   }
 
 	//***************** MilliTimer interface ********************//
   event void PairTimer.fired() {
 		/* 
-		* This function is used call sendPAIRMessage function when the timer is fired.
+		* This function is used to call sendPAIRMessage function when the timer is fired.
 		*/
 		dbg("logger","MOTE [%d]: PairTimer fired.\n", TOS_NODE_ID);
 		sendPAIRMessage(0);
   }
+  
+  event void InfoTimer.fired() {
+		/* 
+		* This function is used to call the read on the FakeKinematicSensor.
+		*/
+		call Read.read();
+  }
 
 	event void MissingTimer.fired() {
 		/* 
-		* This function is used call sendPAIRMessage function when the timer is fired.
+		* This function is used to alert the parent about missing.
 		*/
 		dbg("logger","MOTE [%d]: MissingTimer fired.\n", TOS_NODE_ID);
-
+		dbg("alert","MOTE [%d]: MISSING ALERT, LAST KNOWN COORDINATES [%d,%d].\n", TOS_NODE_ID, last_x_position, last_y_position);
   }
 
 	//***************** Send PAIR/STOP_PAIRING message function ********************//
 	void sendPAIRMessage(uint8_t isStopPairing){
 		/*
-			This function is used to send PARING and STOP_PARING messages.
-			If isStopPairing is equal to 1, then we send a STOP_PAIRING message.
-			Otherwise, we send a PARING message.
-
-			If TOS_NODE_ID is even, then we use KEY1 as KEY.
-			Otherwise, we use KEY2 as KEY.
+		*	This function is used to send PARING and STOP_PARING messages.
+		*	If isStopPairing is equal to 1, then we send a STOP_PAIRING message.
+		*	Otherwise, we send a PARING message.
+		*
+		*	If TOS_NODE_ID is even, then we use KEY1 as KEY.
+		*	Otherwise, we use KEY2 as KEY.
 		*/
+		uint16_t address = 0;
 		pair_t* pair_msg = (pair_t*) call Packet.getPayload(&packet, sizeof(pair_t));
 		if (pair_msg == NULL) return;
 
-		if(isStopPairing == 1){
-			pair_msg->type = STOP_PAIRING;
-		}
-		if(isStopPairing == 0){
-			pair_msg->type = PAIR;
-		}
-		
 		if(TOS_NODE_ID%2==0) {
-			strcpy(pair_msg->key,KEY1);
+			strcpy(pair_msg->key,KEY1);	
 		}
 		else {
 			strcpy(pair_msg->key,KEY2);
 		}
-
+		
 		if(isStopPairing == 1){
-			dbg("logger","MOTE [%d]: Sending PAIR message type: STOP_PAIRING, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
+			pair_msg->type = STOP_PAIR;
+			address = PAIR_ID;
+			dbg("logger","MOTE [%d]: Sending PAIR message type: STOP_PAIR to MOTE %d\n", TOS_NODE_ID, address);
 		}
 		if(isStopPairing == 0){
+			pair_msg->type = PAIR;
+			address = AM_BROADCAST_ADDR;
 			dbg("logger","MOTE [%d]: Sending PAIR message type: PAIR, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
 		}
+		
 		// Send the message in broadcast.
-		call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(pair_t));	
+		call AMSend.send(address, &packet, sizeof(pair_t));
 	}
 
 
@@ -128,17 +140,28 @@ module smartBraceletsC {
 		*	This function is used to send INFO messages.
 		*	data = status
 		*/
-		/*info_t* info_msg = (info_t*) call Packet.getPayload(&packet, sizeof(info_t));
+		info_t* info_msg = (info_t*) call Packet.getPayload(&packet, sizeof(info_t));
 		if (info_msg == NULL) return;
 		
-		//info_msg->position_x = data[0];
-		//info_msg->position_y = data[1];
 		info_msg->status = data;
+		info_msg->position_x = call Random.rand16();
+		info_msg->position_y = call Random.rand16();
+		
 
-		dbg("logger","MOTE [%d]: Sending msg type: INFO, with position_x: %d, position_y: %d, status: %d.\n", TOS_NODE_ID, info_msg->position_x, info_msg->position_y, info_msg->status);
+		dbg("logger","MOTE [%d]: Sending msg type: INFO, with position: [%d,%d], status: %d.\n", TOS_NODE_ID, info_msg->position_x, info_msg->position_y, info_msg->status);
 
 		// TOS_NODE_ID - 2 is the PARENT.
-		call AMSend.send(TOS_NODE_ID - 2, &packet, sizeof(info_t));*/
+		call AMSend.send(PAIR_ID, &packet, sizeof(info_t));
+	}
+	
+	void startOperationMode(){
+		// If the mote is a children, start InfoTimer.
+		if(TOS_NODE_ID == 3 || TOS_NODE_ID == 4){
+			call InfoTimer.startPeriodic(10000); // Call the read on the sensor every 10s.
+		}
+		else{
+			call MissingTimer.startOneShot(60000);
+		}	
 	}
 
 	
@@ -148,22 +171,72 @@ module smartBraceletsC {
 		/* This event is triggered when a message is received.
 		*
 		*/
-		if (len != sizeof(info_t) && len != sizeof(pair_t)) return buf;
+		uint8_t keyMatches = 0;
+		if (len != sizeof(info_t) && len != sizeof(pair_t)) {
+			dbg("logger","MOTE [%d]: Reception error!\n", TOS_NODE_ID);
+			return buf;
+		}
 		
 		// INFO_T STRUCTURE - HANDLE THE INFO MESSAGE.
 		if(len == sizeof(info_t)){
 			info_t* rsm_info = (info_t*)payload;
-			dbg("logger","MOTE [%d]: Received msg type: INFO, with status: %d, position_x: %d, position_y: %d.\n", TOS_NODE_ID, rsm_info->status, rsm_info->position_x, rsm_info->position_y);
-			// CHECK STATUS OF THE CHILD
+			
+			// INFO received stop MissingTimer.
+		 	call MissingTimer.stop();
+			dbg("logger","MOTE [%d]: Received msg type: INFO, with position: [%d,%d], status: %d.\n", TOS_NODE_ID, rsm_info->position_x, rsm_info->position_y, rsm_info->status);
+			
+			// Update last known position.
+			last_x_position = rsm_info->position_x;
+			last_y_position = rsm_info->position_y;
+			
+			if(rsm_info->status == FALLING){
+				dbg("logger","MOTE [%d]: FALLING ALERT, POSITION[%d,%d].\n", TOS_NODE_ID, rsm_info->position_x, rsm_info->position_y);
+				dbg("alert","MOTE [%d]: FALLING ALERT, COORDINATES [%d,%d].\n", TOS_NODE_ID, rsm_info->position_x, rsm_info->position_y);
+			}
+			// Restart MissingTimer.
+			call MissingTimer.startOneShot(60000);
 		}
 
 		// PAIR_T STRUCTURE - HANDLE THE PAIR MESSAGE.
 		if(len == sizeof(pair_t)){
 			pair_t* rsm_pair = (pair_t*)payload;
-			dbg("logger","MOTE [%d]: Received msg type: PAIR, with key: %s.\n", TOS_NODE_ID, rsm_pair->key);
-			// CHECK KEYS TO END PAIR
 
-			//call Read.read(); // START READING FROM SENSOR
+			if(rsm_pair->type == PAIR){
+				dbg("logger","MOTE [%d]: Received msg type: PAIR, with key: %s.\n", TOS_NODE_ID, rsm_pair->key);
+				
+				// TOS_NODE_ID is even, check KEY1 match.
+				if(TOS_NODE_ID%2==0){
+					if(strcmp(rsm_pair->key,KEY1)==0){
+						dbg("logger","MOTE [%d]: KEY: %s MATCHES.\n", TOS_NODE_ID, KEY1);
+						keyMatches = 1;
+						// Update PAIR_ID.
+						if(TOS_NODE_ID == 2) PAIR_ID = TOS_NODE_ID + 2;
+						else PAIR_ID = TOS_NODE_ID - 2;
+					}
+				}
+				// TOS_NODE_ID is odd, check KEY2 match.
+				else{
+					if(strcmp(rsm_pair->key,KEY2)==0){
+						dbg("logger","MOTE [%d]: KEY: %s MATCHES.\n", TOS_NODE_ID, KEY2);
+						keyMatches = 1;
+						// Update PAIR_ID.
+						if(TOS_NODE_ID == 1) PAIR_ID = TOS_NODE_ID + 2;
+						else PAIR_ID = TOS_NODE_ID - 2;
+					}
+				}
+				
+				if(keyMatches == 1){
+					call PairTimer.stop();
+					dbg("logger","MOTE [%d]: PairTimer stopped!\n", TOS_NODE_ID);
+					sendPAIRMessage(1);
+					startOperationMode();
+				}
+			}
+			if(rsm_pair->type == STOP_PAIR){
+				dbg("logger","MOTE [%d]: Received msg type: STOP_PAIR.\n", TOS_NODE_ID);
+				call PairTimer.stop();
+				startOperationMode();
+			}
 		}
 		return buf;
   }
@@ -172,10 +245,7 @@ module smartBraceletsC {
   event void AMSend.sendDone(message_t* buf,error_t err) {
 		/* This event is triggered when a message is sent.
 		*/
-		if(&packet == buf && err == SUCCESS) {
-			dbg("logger","MOTE [%d]: Message sent.\n", TOS_NODE_ID);
-		}
-		else{
+		if(&packet != buf || err != SUCCESS) {
 			dbg("logger","MOTE [%d]: Message not sent, sendDone error!.\n", TOS_NODE_ID);
 		}
   }
@@ -184,10 +254,10 @@ module smartBraceletsC {
 	event void Read.readDone(error_t result, uint16_t data) {
 		/* 
 		*	 This event is triggered when the fake status/coordinates sensor finishes to read (after a Read.read()) 
-		*  The data is stored in data[3] -> [X,Y,STATUS]
+		*  The data is stored in data -> STATUS
 		*/
-		// If the read is successful, the mote is paired, and it's not a Parent, then we can send the INFO message.
-		if(result != SUCCESS || TOS_NODE_ID == 1 || TOS_NODE_ID == 2) return;
+		// If the read is successful then we can send the INFO message.
+		if(result != SUCCESS) return;
 
 		sendINFOMessage(data);
 	}
