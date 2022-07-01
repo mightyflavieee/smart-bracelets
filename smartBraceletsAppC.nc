@@ -9,7 +9,7 @@ implementation {
   components new AMSenderC(AM_MY_MSG);
   components new AMReceiverC(AM_MY_MSG);
   components new TimerMilliC() as PairTimer;
-	components new TimerMilliC() as MissingTimer;
+  components new TimerMilliC() as MissingTimer;
   components new FakeKineticSensorC();
   components ActiveMessageC;
 
@@ -20,12 +20,11 @@ implementation {
   /****** Other interfaces *****/
   App.Receive -> AMReceiverC;
   App.AMSend -> AMSenderC;
-  App.AMControl -> ActiveMessageC;
-  App.MilliTimer.PairTimer -> PairTimer;
-	App.MilliTimer.MissingTimer -> MissingTimer;
+  App.SplitControl -> ActiveMessageC;
+  App.PairTimer -> PairTimer;
+  App.MissingTimer -> MissingTimer;
   App.Packet -> AMSenderC;
-  App.PacketAcknowledgements -> AMSenderC;
   
-  // Fake KineticStatus/Coordinates Sensor read
-  App.Read -> FakeInfoSensorC;
+  // Fake KineticStatus Sensor read
+  App.Read -> FakeKineticSensorC;
 }

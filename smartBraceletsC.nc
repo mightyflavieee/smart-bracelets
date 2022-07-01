@@ -19,7 +19,7 @@ module smartBraceletsC {
 	interface Timer<TMilli> as MissingTimer;
 	
 	// Interface used to perform kinetic status and coordinates fake reading
-	interface Read<uint16_t*>;
+	interface Read<uint16_t>;
 
   }
 
@@ -33,14 +33,13 @@ module smartBraceletsC {
 	*	MOTE 2 AND MOTE 4 are CHILDREN.
 	*/
 
-	uint8_t KEY1[21] = "AAAAAAAAAAAAAAAAAAAA\0";
-	uint8_t KEY2[21] = "BBBBBBBBBBBBBBBBBBBB\0";
-	uint8_t isPaired = 0;
+	uint8_t KEY1[21] = {'F','I','R','S','T','K','E','Y','F','I','R','S','T','K','E','Y','1','1','1','1','\0'};
+	uint8_t KEY2[21] = {'S','E','C','O','N','D','K','E','Y','S','E','C','O','N','D','K','E','Y','2','2','\0'};
 	uint8_t last_x_position = 0;
 	uint8_t last_y_position = 0;
   message_t packet;
 
-	void sendINFOMessage(uint16_t data[3]);
+	void sendINFOMessage(uint16_t data);
 	void sendPAIRMessage(uint8_t isStopPairing); 
 
 	//***************** Boot interface ********************//
@@ -56,7 +55,7 @@ module smartBraceletsC {
 		*	Otherwise, we can't start the timer.
 		*/
     if(err == SUCCESS) {
-			dbg("logger","MOTE [%d]: is starting the Timer...\n", TOS_NODE_ID);
+			dbg("logger","MOTE [%d]: is starting the PairTimer...\n", TOS_NODE_ID);
 			call PairTimer.startPeriodic(500);
     }
   }
@@ -108,36 +107,38 @@ module smartBraceletsC {
 		
 		if(TOS_NODE_ID%2==0) {
 			strcpy(pair_msg->key,KEY1);
+				
 		}
 		else {
 			strcpy(pair_msg->key,KEY2);
 		}
-
-		dbg("logger","MOTE [%d]: Sending INFO message type: PAIR, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
+		if(isStopPairing == 1){
+			dbg("logger","MOTE [%d]: Sending PAIR message type: STOP_PAIRING, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
+		}
+		if(isStopPairing == 0){
+			dbg("logger","MOTE [%d]: Sending PAIR message type: PAIR, with key: %s.\n", TOS_NODE_ID, pair_msg->key);
+		}
 		// Send the message in broadcast.
 		call AMSend.send(AM_BROADCAST_ADDR, &packet, sizeof(pair_t));	
 	}
 
 
-	void sendINFOMessage(uint16_t data[3]){
+	void sendINFOMessage(uint16_t data){
 		/*
 		*	This function is used to send INFO messages.
-		*	The data is composed of:
-		*		data[0] = x_position
-		*		data[1] = y_position
-		*		data[2] = status
+		*	data = status
 		*/
-		info_t* info_msg = (info_t*) call Packet.getPayload(&packet, sizeof(info_t));
+		/*info_t* info_msg = (info_t*) call Packet.getPayload(&packet, sizeof(info_t));
 		if (info_msg == NULL) return;
 		
-		info_msg->position_x = data[0];
-		info_msg->position_y = data[1];
-		info_msg->status = data[2];
+		//info_msg->position_x = data[0];
+		//info_msg->position_y = data[1];
+		info_msg->status = data;
 
 		dbg("logger","MOTE [%d]: Sending msg type: INFO, with position_x: %d, position_y: %d, status: %d.\n", TOS_NODE_ID, info_msg->position_x, info_msg->position_y, info_msg->status);
 
 		// TOS_NODE_ID - 2 is the PARENT.
-		call AMSend.send(TOS_NODE_ID - 2, &packet, sizeof(info_t));
+		call AMSend.send(TOS_NODE_ID - 2, &packet, sizeof(info_t));*/
 	}
 
 	
@@ -180,13 +181,13 @@ module smartBraceletsC {
   }
 
 	//************************* Read interface **********************//
-	event void Read.readDone(error_t result, uint16_t data[3]) {
+	event void Read.readDone(error_t result, uint16_t data) {
 		/* 
 		*	 This event is triggered when the fake status/coordinates sensor finishes to read (after a Read.read()) 
 		*  The data is stored in data[3] -> [X,Y,STATUS]
 		*/
 		// If the read is successful, the mote is paired, and it's not a Parent, then we can send the INFO message.
-		if(result != SUCCESS || isPaired == 0 || TOS_NODE_ID == 1 || TOS_NODE_ID == 2) return;
+		if(result != SUCCESS || TOS_NODE_ID == 1 || TOS_NODE_ID == 2) return;
 
 		sendINFOMessage(data);
 	}

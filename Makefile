@@ -1,3 +1,3 @@
-COMPONENT=smartBraceletsC
+COMPONENT=smartBraceletsAppC
 include $(MAKERULES)
 
