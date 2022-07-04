@@ -1,0 +1,124 @@
+[
+    {
+        "id": "f508c4a39167da42",
+        "type": "tab",
+        "label": "Smart Bracelets",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "7a0b97cd11799551",
+        "type": "exec",
+        "z": "f508c4a39167da42",
+        "command": "python3 --version",
+        "addpay": "",
+        "append": "",
+        "useSpawn": "false",
+        "timer": "",
+        "winHide": false,
+        "oldrc": false,
+        "name": "Run Simulation",
+        "x": 460,
+        "y": 320,
+        "wires": [
+            [
+                "727828237fde615a",
+                "03c15b40af453c58"
+            ],
+            [
+                "9ef78c188062ab7b"
+            ],
+            []
+        ]
+    },
+    {
+        "id": "727828237fde615a",
+        "type": "ui_text",
+        "z": "f508c4a39167da42",
+        "group": "8d70782f925d3e01",
+        "order": 0,
+        "width": 0,
+        "height": 0,
+        "name": "Dashboard",
+        "label": "Output: ",
+        "format": "{{msg.payload}}",
+        "layout": "row-center",
+        "className": "",
+        "x": 730,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "03c15b40af453c58",
+        "type": "debug",
+        "z": "f508c4a39167da42",
+        "name": "Debug",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "7b3736de112d067f",
+        "type": "inject",
+        "z": "f508c4a39167da42",
+        "name": "Start",
+        "props": [],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "x": 230,
+        "y": 320,
+        "wires": [
+            [
+                "7a0b97cd11799551"
+            ]
+        ]
+    },
+    {
+        "id": "9ef78c188062ab7b",
+        "type": "debug",
+        "z": "f508c4a39167da42",
+        "name": "Errors",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 380,
+        "wires": []
+    },
+    {
+        "id": "8d70782f925d3e01",
+        "type": "ui_group",
+        "name": "Default",
+        "tab": "d98a15895acbe5c6",
+        "order": 1,
+        "disp": true,
+        "width": "6",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "d98a15895acbe5c6",
+        "type": "ui_tab",
+        "name": "Smart Bracelets",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
