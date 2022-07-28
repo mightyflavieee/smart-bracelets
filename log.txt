@@ -1,0 +1,114 @@
+********************************************
+*                                          *
+*             TOSSIM Script                *
+*                                          *
+********************************************
+Initializing mac....
+Initializing radio channels....
+    using topology file: topology.txt
+    using noise file: meyer-heavy.txt
+Initializing simulator....
+Activate debug message on channel logger
+Activate debug message on channel alert
+Creating node 1...
+Creating node 2...
+Creating node 3...
+Creating node 4...
+Creating radio channels...
+>>>Setting radio channel from node  1  to node  2  with gain  -60.0  dBm
+>>>Setting radio channel from node  2  to node  1  with gain  -60.0  dBm
+>>>Setting radio channel from node  1  to node  3  with gain  -60.0  dBm
+>>>Setting radio channel from node  3  to node  1  with gain  -60.0  dBm
+>>>Setting radio channel from node  1  to node  4  with gain  -60.0  dBm
+>>>Setting radio channel from node  4  to node  1  with gain  -60.0  dBm
+>>>Setting radio channel from node  2  to node  3  with gain  -60.0  dBm
+>>>Setting radio channel from node  3  to node  2  with gain  -60.0  dBm
+>>>Setting radio channel from node  2  to node  4  with gain  -60.0  dBm
+>>>Setting radio channel from node  4  to node  2  with gain  -60.0  dBm
+>>>Setting radio channel from node  3  to node  4  with gain  -60.0  dBm
+>>>Setting radio channel from node  4  to node  3  with gain  -60.0  dBm
+Initializing Closest Pattern Matching (CPM)...
+Reading noise model data file: meyer-heavy.txt
+Loading:##Done!
+>>>Creating noise model for node: 1
+>>>Creating noise model for node: 2
+>>>Creating noise model for node: 3
+>>>Creating noise model for node: 4
+Start simulation with TOSSIM! 
+
+
+
+DEBUG (1): MOTE [1]: Application booted.
+DEBUG (4): MOTE [4]: Application booted.
+DEBUG (3): MOTE [3]: Application booted.
+DEBUG (2): MOTE [2]: Application booted.
+DEBUG (1): MOTE [1]: is starting the PairTimer...
+DEBUG (2): MOTE [2]: is starting the PairTimer...
+DEBUG (4): MOTE [4]: is starting the PairTimer...
+DEBUG (3): MOTE [3]: is starting the PairTimer...
+DEBUG (2): MOTE [2]: PairTimer fired.
+DEBUG (2): MOTE [2]: Sending PAIR message type: PAIR, with key: F1RSTK3YF1RSTK3Y1111.
+DEBUG (3): MOTE [3]: PairTimer fired.
+DEBUG (3): MOTE [3]: Sending PAIR message type: PAIR, with key: S3C0NDK3YS3C0NDK3Y22.
+DEBUG (4): MOTE [4]: PairTimer fired.
+DEBUG (4): MOTE [4]: Sending PAIR message type: PAIR, with key: F1RSTK3YF1RSTK3Y1111.
+DEBUG (1): MOTE [1]: PairTimer fired.
+DEBUG (1): MOTE [1]: Sending PAIR message type: PAIR, with key: S3C0NDK3YS3C0NDK3Y22.
+DEBUG (4): MOTE [4]: Received msg type: PAIR, with key: F1RSTK3YF1RSTK3Y1111.
+DEBUG (4): MOTE [4]: KEY: F1RSTK3YF1RSTK3Y1111 MATCHES.
+DEBUG (4): MOTE [4]: PairTimer stopped!
+DEBUG (4): MOTE [4]: Sending PAIR message type: STOP_PAIR to MOTE 2
+DEBUG (3): MOTE [3]: Received msg type: PAIR, with key: F1RSTK3YF1RSTK3Y1111.
+DEBUG (1): MOTE [1]: Received msg type: PAIR, with key: F1RSTK3YF1RSTK3Y1111.
+DEBUG (2): MOTE [2]: Received msg type: STOP_PAIR.
+DEBUG (4): MOTE [4]: Received msg type: PAIR, with key: S3C0NDK3YS3C0NDK3Y22.
+DEBUG (3): MOTE [3]: Received msg type: PAIR, with key: S3C0NDK3YS3C0NDK3Y22.
+DEBUG (3): MOTE [3]: KEY: S3C0NDK3YS3C0NDK3Y22 MATCHES.
+DEBUG (3): MOTE [3]: PairTimer stopped!
+DEBUG (3): MOTE [3]: Sending PAIR message type: STOP_PAIR to MOTE 1
+DEBUG (2): MOTE [2]: Received msg type: PAIR, with key: S3C0NDK3YS3C0NDK3Y22.
+DEBUG (1): MOTE [1]: Received msg type: STOP_PAIR.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [9909,24640], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [9909,24640], status: 5.
+DEBUG (3): MOTE [3]: Sending msg type: INFO, with position: [60356,45927], status: 3.
+DEBUG (1): MOTE [1]: Received msg type: INFO, with position: [60356,45927], status: 3.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [38284,17897], status: 3.
+DEBUG (3): MOTE [3]: Sending msg type: INFO, with position: [56842,27424], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [38284,17897], status: 3.
+DEBUG (1): MOTE [1]: Received msg type: INFO, with position: [56842,27424], status: 5.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [12793,60498], status: 6.
+DEBUG (3): MOTE [3]: Sending msg type: INFO, with position: [10234,48398], status: 4.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [12793,60498], status: 6.
+DEBUG (2): MOTE [2]: FALLING ALERT, POSITION[12793,60498].
+DEBUG (2): MOTE [2]: FALLING ALERT, COORDINATES [12793,60498].
+DEBUG (1): MOTE [1]: Received msg type: INFO, with position: [10234,48398], status: 4.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [64249,11691], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [64249,11691], status: 5.
+DEBUG (3): MOTE [3]: Sending msg type: INFO, with position: [25185,61782], status: 4.
+DEBUG (1): MOTE [1]: Received msg type: INFO, with position: [25185,61782], status: 4.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [19306,10111], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [19306,10111], status: 5.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [7542,17749], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [7542,17749], status: 5.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [28324,59117], status: 6.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [28324,59117], status: 6.
+DEBUG (2): MOTE [2]: FALLING ALERT, POSITION[28324,59117].
+DEBUG (2): MOTE [2]: FALLING ALERT, COORDINATES [28324,59117].
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [61155,46877], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [61155,46877], status: 5.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [715,34583], status: 6.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [715,34583], status: 6.
+DEBUG (2): MOTE [2]: FALLING ALERT, POSITION[715,34583].
+DEBUG (2): MOTE [2]: FALLING ALERT, COORDINATES [715,34583].
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [21930,4390], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [21930,4390], status: 5.
+DEBUG (1): MOTE [1]: MissingTimer fired.
+DEBUG (1): MOTE [1]: MISSING ALERT, LAST KNOWN COORDINATES [25185,61782].
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [34525,19561], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [34525,19561], status: 5.
+DEBUG (4): MOTE [4]: Sending msg type: INFO, with position: [42989,58694], status: 5.
+DEBUG (2): MOTE [2]: Received msg type: INFO, with position: [42989,58694], status: 5.
+
+
+
+Simulation finished!
