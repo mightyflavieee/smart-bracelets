@@ -150,15 +150,18 @@ module smartBraceletsC {
 
 		dbg("logger","MOTE [%d]: Sending msg type: INFO, with position: [%d,%d], status: %d.\n", TOS_NODE_ID, info_msg->position_x, info_msg->position_y, info_msg->status);
 
-		// TOS_NODE_ID - 2 is the PARENT.
 		call AMSend.send(PAIR_ID, &packet, sizeof(info_t));
 	}
 	
 	void startOperationMode(){
+		/*
+		*	This function is used start the operation phase, based on the different type of motes.
+		*/
 		// If the mote is a children, start InfoTimer.
 		if(TOS_NODE_ID == 3 || TOS_NODE_ID == 4){
 			call InfoTimer.startPeriodic(10000); // Call the read on the sensor every 10s.
 		}
+		// If the mote is a parent, start the MissingTimer.
 		else{
 			call MissingTimer.startOneShot(60000);
 		}	
@@ -181,7 +184,7 @@ module smartBraceletsC {
 		if(len == sizeof(info_t)){
 			info_t* rsm_info = (info_t*)payload;
 			
-			// INFO received stop MissingTimer.
+			// INFO received, stop MissingTimer.
 		 	call MissingTimer.stop();
 			dbg("logger","MOTE [%d]: Received msg type: INFO, with position: [%d,%d], status: %d.\n", TOS_NODE_ID, rsm_info->position_x, rsm_info->position_y, rsm_info->status);
 			
@@ -209,8 +212,10 @@ module smartBraceletsC {
 					if(strcmp(rsm_pair->key,KEY1)==0){
 						dbg("logger","MOTE [%d]: KEY: %s MATCHES.\n", TOS_NODE_ID, KEY1);
 						keyMatches = 1;
-						// Update PAIR_ID.
+
+						// Update PAIR_ID, if TOS_NODE_ID==2 then the mote is the parent, pair with mote 4.
 						if(TOS_NODE_ID == 2) PAIR_ID = TOS_NODE_ID + 2;
+						//if TOS_NODE_ID==4 then the mote is the child, pair with mote 2.
 						else PAIR_ID = TOS_NODE_ID - 2;
 					}
 				}
@@ -219,8 +224,10 @@ module smartBraceletsC {
 					if(strcmp(rsm_pair->key,KEY2)==0){
 						dbg("logger","MOTE [%d]: KEY: %s MATCHES.\n", TOS_NODE_ID, KEY2);
 						keyMatches = 1;
-						// Update PAIR_ID.
+
+						// Update PAIR_ID, if TOS_NODE_ID==2 then the mote is the parent, pair with mote 4.
 						if(TOS_NODE_ID == 1) PAIR_ID = TOS_NODE_ID + 2;
+						//if TOS_NODE_ID==3 then the mote is the child, pair with mote 1.
 						else PAIR_ID = TOS_NODE_ID - 2;
 					}
 				}
@@ -228,10 +235,12 @@ module smartBraceletsC {
 				if(keyMatches == 1){
 					call PairTimer.stop();
 					dbg("logger","MOTE [%d]: PairTimer stopped!\n", TOS_NODE_ID);
+					// Send a PAIR message with isStopPairing = 1, to stop the pairing process.
 					sendPAIRMessage(1);
 					startOperationMode();
 				}
 			}
+			// When STOP_PAIR is received, switch to the operation mode.
 			if(rsm_pair->type == STOP_PAIR){
 				dbg("logger","MOTE [%d]: Received msg type: STOP_PAIR.\n", TOS_NODE_ID);
 				call PairTimer.stop();
@@ -243,8 +252,7 @@ module smartBraceletsC {
 
 	//********************* AMSend interface ****************//
   event void AMSend.sendDone(message_t* buf,error_t err) {
-		/* This event is triggered when a message is sent.
-		*/
+		/* This event is triggered when a message is sent.*/
 		if(&packet != buf || err != SUCCESS) {
 			dbg("logger","MOTE [%d]: Message not sent, sendDone error!.\n", TOS_NODE_ID);
 		}
@@ -253,7 +261,7 @@ module smartBraceletsC {
 	//************************* Read interface **********************//
 	event void Read.readDone(error_t result, uint16_t data) {
 		/* 
-		*	 This event is triggered when the fake status/coordinates sensor finishes to read (after a Read.read()) 
+		*	 This event is triggered when the fake status sensor finishes to read (after a Read.read()) 
 		*  The data is stored in data -> STATUS
 		*/
 		// If the read is successful then we can send the INFO message.
