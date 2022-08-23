@@ -10,8 +10,8 @@ typedef nx_struct pair {
 // Operation mode messages
 typedef nx_struct info {
 	nx_uint16_t status; // Status can be STANDING WALKING RUNNING FALLING
-	nx_uint16_t position_x; // Posiotion of the child bracelet on the X assis
-	nx_uint16_t position_y; // Posiotion of the child bracelet on the Y assis
+	nx_uint16_t position_x; // Position of the child bracelet on the X axis
+	nx_uint16_t position_y; // Position of the child bracelet on the Y axis
 } info_t;
 
 #define PAIR 1
